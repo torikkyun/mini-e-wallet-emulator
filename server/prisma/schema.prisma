@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  wallet    Wallet?
+
+  transactions         Transaction[] @relation("UserTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
+
+  @@map("users")
+}
+
+model Wallet {
+  id       String  @id @default(uuid())
+  userId   String  @unique @map("user_id")
+  balance  Decimal @default(0.0)
+  currency String  @default("VNĐ")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  userId      String          @map("user_id")
+  type        TransactionType
+  amount      Decimal
+  toUserId    String?         @map("to_user_id")
+  description String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  user   User  @relation("UserTransactions", fields: [userId], references: [id])
+  toUser User? @relation("ReceivedTransactions", fields: [toUserId], references: [id])
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  topup
+  withdraw
+  transfer_out
+  transfer_in
+}
