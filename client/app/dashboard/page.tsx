@@ -24,46 +24,53 @@ export default function DashboardPage() {
     router.push('/login');
   };
 
+  const reloadData = () => {
+    setLoading(true);
+    setError('');
+    fetchAll();
+  };
+
+  const fetchAll = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const userRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      const userData = userRes.data?.data?.user;
+      setUser(userData);
+
+      const walletRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/wallets/`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      setWallet(walletRes.data?.data?.wallet);
+
+      const transactionsRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/transactions/`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      setTransactions(transactionsRes.data?.data?.transactions || []);
+    } catch (err) {
+      setError('Lỗi: Không thể lấy dữ liệu từ máy chủ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const accessToken = localStorage.getItem('accessToken');
-        const userRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          },
-        );
-        const userData = userRes.data?.data?.user;
-        setUser(userData);
-
-        const walletRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/wallets/`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          },
-        );
-        setWallet(walletRes.data?.data?.wallet);
-
-        const transactionsRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/transactions/`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          },
-        );
-        setTransactions(transactionsRes.data?.data?.transactions || []);
-      } catch (err) {
-        setError('Lỗi: Không thể lấy dữ liệu từ máy chủ');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAll();
   }, []);
 
@@ -136,7 +143,10 @@ export default function DashboardPage() {
       </div>
       <TransactionTable transactions={transactionsForTable} />
 
-      <TransactionDialogs balance={Number(wallet.balance)} />
+      <TransactionDialogs
+        balance={Number(wallet.balance)}
+        onSuccess={reloadData}
+      />
 
       <div className="flex justify-end mt-8">
         <Button variant="destructive" onClick={handleLogout}>

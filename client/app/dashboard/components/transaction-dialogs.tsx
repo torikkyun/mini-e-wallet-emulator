@@ -5,20 +5,27 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 type Action = 'topup' | 'withdraw' | 'transfer';
 
-export function TransactionDialogs({ balance }: { balance: number }) {
+export function TransactionDialogs({
+  balance,
+  onSuccess,
+}: {
+  balance: number;
+  onSuccess?: () => void;
+}) {
   const [open, setOpen] = useState<Action | null>(null);
   const [amount, setAmount] = useState('');
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -29,38 +36,101 @@ export function TransactionDialogs({ balance }: { balance: number }) {
     return () => window.removeEventListener('open-dialog', handler);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount <= 0) {
       toast('Số tiền không hợp lệ');
+      setIsSubmitting(false);
       return;
     }
 
     if (open === 'withdraw' && numAmount > balance) {
       toast('Số dư không đủ');
+      setIsSubmitting(false);
       return;
     }
 
     if (open === 'transfer' && (!email || email === '')) {
       toast('Vui lòng nhập email người nhận');
+      setIsSubmitting(false);
       return;
     }
 
-    // Gọi API ở đây (sau này thay bằng fetch)
-    console.log(
-      `${open} ${numAmount} đ`,
-      open === 'transfer' ? `to ${email}` : '',
-    );
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      if (open === 'topup') {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/transactions/topup`,
+          {
+            amount: numAmount,
+            description: 'Nạp tiền vào tài khoản',
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        if (onSuccess) onSuccess();
+      } else if (open === 'withdraw') {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/transactions/withdraw`,
+          {
+            amount: numAmount,
+            description: 'Rút tiền từ tài khoản',
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        if (onSuccess) onSuccess();
+      } else if (open === 'transfer') {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/transactions/transfer`,
+          {
+            amount: numAmount,
+            email,
+            description: 'Chuyển tiền đến tài khoản khác',
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        if (onSuccess) onSuccess();
+      }
+    } catch (err: any) {
+      toast(err?.response?.data?.message || 'Có lỗi xảy ra');
+      setIsSubmitting(false);
+      return;
+    }
 
-    toast(
-      `${open === 'topup' ? 'Nạp' : open === 'withdraw' ? 'Rút' : 'Chuyển'} tiền thành công!`,
-    );
+    setIsSubmitting(false);
     setOpen(null);
     setAmount('');
     setEmail('');
   };
+
+  function formatCurrency(value: string) {
+    const number = value.replace(/\D/g, '');
+    if (!number) return '';
+    return Number(number).toLocaleString('vi-VN');
+  }
+
+  function parseCurrency(value: string) {
+    return value.replace(/\D/g, '');
+  }
 
   const dialogTitle =
     {
@@ -77,9 +147,6 @@ export function TransactionDialogs({ balance }: { balance: number }) {
           open={open === action}
           onOpenChange={(isOpen) => !isOpen && setOpen(null)}
         >
-          {/* <DialogTrigger asChild>
-            <Button className="hidden" />
-          </DialogTrigger> */}
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{dialogTitle}</DialogTitle>
@@ -88,9 +155,13 @@ export function TransactionDialogs({ balance }: { balance: number }) {
               <div className="space-y-3">
                 <Label>Số tiền (đ)</Label>
                 <Input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  type="text"
+                  inputMode="numeric"
+                  value={formatCurrency(amount)}
+                  onChange={(e) => {
+                    const raw = parseCurrency(e.target.value);
+                    setAmount(raw);
+                  }}
                   placeholder="Nhập số tiền"
                   required
                 />
@@ -110,14 +181,19 @@ export function TransactionDialogs({ balance }: { balance: number }) {
               )}
 
               <div className="flex gap-2 pt-2">
-                <Button type="submit" className="flex-1">
-                  Xác nhận
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Đang xử lý...' : 'Xác nhận'}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setOpen(null)}
                   className="flex-1"
+                  disabled={isSubmitting}
                 >
                   Hủy
                 </Button>

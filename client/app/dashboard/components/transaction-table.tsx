@@ -11,7 +11,7 @@ type Transaction = {
   id: number;
   type: string;
   amount: number;
-  toUser?: { name: string } | null;
+  toUser?: { name: string; email: string } | null;
   createdAt: string;
 };
 
@@ -26,9 +26,9 @@ export default function TransactionTable({
         return 'Nạp tiền';
       case 'withdraw':
         return 'Rút tiền';
-      case 'transfer_out':
+      case 'transferOut':
         return 'Chuyển tiền';
-      case 'transfer_in':
+      case 'transferIn':
         return 'Nhận tiền';
       default:
         return type;
@@ -66,15 +66,19 @@ export default function TransactionTable({
                 <TableCell>{formatType(tx.type)}</TableCell>
                 <TableCell
                   className={
-                    tx.type === 'transfer_in' || tx.type === 'topup'
+                    tx.type === 'transferIn' || tx.type === 'topup'
                       ? 'text-green-600 font-medium'
                       : 'text-red-600'
                   }
                 >
-                  {tx.type === 'transfer_in' || tx.type === 'topup' ? '+' : '-'}{' '}
+                  {tx.type === 'transferIn' || tx.type === 'topup' ? '+' : '-'}{' '}
                   {formatAmount(tx.amount)}
                 </TableCell>
-                <TableCell>{tx.toUser?.name || '-'}</TableCell>
+                <TableCell>
+                  {tx.type === 'transferOut' || tx.type === 'transferIn'
+                    ? tx.toUser?.name || tx.toUser?.email || '-'
+                    : '-'}
+                </TableCell>
               </TableRow>
             ))
           )}
