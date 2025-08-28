@@ -4,6 +4,53 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  wallet    Wallet?
+
+  transactions         Transaction[] @relation("UserTransactions")
+  receivedTransactions Transaction[] @relation("ReceiverTransactions")
+
+  @@map("users")
+}
+
+model Wallet {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String @unique @db.ObjectId
+  balance  Int    @default(0)
+  currency String @default("VND")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  type        String
+  amount      Int
+  toUserId    String?  @db.ObjectId
+  description String?
+  createdAt   DateTime @default(now())
+
+  user   User  @relation("UserTransactions", fields: [userId], references: [id])
+  toUser User? @relation("ReceiverTransactions", fields: [toUserId], references: [id])
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  topup
+  withdraw
+  transferOut
+  transferIn
 }
