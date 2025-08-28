@@ -1,34 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { TopupDto } from './dto/topup.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
-@Controller('transactions')
+@Controller('api/transactions')
+@ApiTags('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
-  @Post()
-  create(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionsService.create(createTransactionDto);
-  }
-
   @Get()
-  findAll() {
-    return this.transactionsService.findAll();
+  @ApiBearerAuth()
+  getTransactionHistory(@CurrentUser() user: { id: string }) {
+    return this.transactionsService.findAllByUserId(user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transactionsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTransactionDto: UpdateTransactionDto) {
-    return this.transactionsService.update(+id, updateTransactionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transactionsService.remove(+id);
+  @Post('topup')
+  @ApiBearerAuth()
+  topup(@CurrentUser() user: { id: string }, @Body() topupDto: TopupDto) {
+    return this.transactionsService.topup(user, topupDto);
   }
 }

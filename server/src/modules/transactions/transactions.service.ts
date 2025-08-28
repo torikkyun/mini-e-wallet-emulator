@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TransactionType } from 'generated/prisma';
+import { PrismaService } from 'src/core/prisma/prisma.service';
+import { TopupDto } from './dto/topup.dto';
 
 @Injectable()
 export class TransactionsService {
-  create(createTransactionDto: CreateTransactionDto) {
-    return 'This action adds a new transaction';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAllByUserId(userId: string) {
+    return {
+      message: 'Lấy lịch sử giao dịch thành công',
+      transactions: await this.prisma.transaction.findMany({
+        where: { userId },
+      }),
+    };
   }
 
-  findAll() {
-    return `This action returns all transactions`;
-  }
+  async topup({ id }: { id: string }, { amount, description }: TopupDto) {
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { userId: id },
+    });
+    if (!wallet) throw new NotFoundException('Wallet not found');
 
-  findOne(id: number) {
-    return `This action returns a #${id} transaction`;
-  }
+    const transaction = await this.prisma.transaction.create({
+      data: {
+        userId: id,
+        type: TransactionType.topup,
+        amount,
+        description,
+      },
+    });
 
-  update(id: number, updateTransactionDto: UpdateTransactionDto) {
-    return `This action updates a #${id} transaction`;
-  }
+    await this.prisma.wallet.update({
+      where: { userId: id },
+      data: { balance: { increment: amount } },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} transaction`;
+    return {
+      message: 'Nạp tiền thành công',
+      transaction,
+    };
   }
 }
