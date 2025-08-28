@@ -6,6 +6,8 @@ import {
 import { TransactionType } from 'generated/prisma';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { TopupDto } from './dto/topup.dto';
+import { TransferDto } from './dto/transfer.dto';
+import { WithdrawDto } from './dto/withdraw.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -46,7 +48,7 @@ export class TransactionsService {
     };
   }
 
-  async withdraw({ id }: { id: string }, { amount, description }: TopupDto) {
+  async withdraw({ id }: { id: string }, { amount, description }: WithdrawDto) {
     const wallet = await this.prisma.wallet.findUnique({
       where: { userId: id },
     });
@@ -76,11 +78,7 @@ export class TransactionsService {
 
   async transfer(
     { id }: { id: string },
-    {
-      toUserId,
-      amount,
-      description,
-    }: { toUserId: string; amount: number; description?: string },
+    { toUserId, amount, description }: TransferDto,
   ) {
     if (id === toUserId)
       throw new BadRequestException('Không thể chuyển cho chính mình');
