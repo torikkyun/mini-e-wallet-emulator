@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export function LoginForm({
+export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
@@ -18,46 +18,53 @@ export function LoginForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Đăng nhập</CardTitle>
-          <CardDescription>Nhập email của bạn để đăng nhập</CardDescription>
+          <CardTitle>Đăng ký</CardTitle>
+          <CardDescription>
+            Tạo tài khoản mới để sử dụng ví điện tử
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form>
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="fullName">Họ và tên</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="fullName"
+                  type="text"
+                  placeholder="Nguyễn Văn A"
                   required
                 />
               </div>
               <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Mật khẩu</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Quên mật khẩu?
-                  </a>
-                </div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  required
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="password">Mật khẩu</Label>
                 <Input id="password" type="password" required />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+                <Input id="confirmPassword" type="password" required />
               </div>
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">
-                  Đăng nhập
+                  Đăng ký
                 </Button>
                 <Button variant="outline" className="w-full">
-                  Đăng nhập với Google
+                  Đăng ký với Google
                 </Button>
               </div>
             </div>
             <div className="mt-4 text-center text-sm">
-              Bạn chưa có tài khoản?{' '}
-              <a href="/register" className="underline underline-offset-4">
-                Đăng ký
+              Đã có tài khoản?{' '}
+              <a href="/login" className="underline underline-offset-4">
+                Đăng nhập
               </a>
             </div>
           </form>
