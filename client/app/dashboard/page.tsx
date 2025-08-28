@@ -1,47 +1,108 @@
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import BalanceCard from './components/balance-card';
 import ActionCard from './components/action-card';
 import TransactionTable from './components/transaction-table';
 import { TransactionDialogs } from './components/transaction-dialogs';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
-export default async function DashboardPage() {
-  // const session = await getServerSession(authOptions);
-  // if (!session) redirect('/login');
+export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null);
+  const [wallet, setWallet] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-  // const user = await prisma.user.findUnique({
-  //   where: { email: session.user?.email! },
-  //   include: {
-  //     wallet: true,
-  //     transactions: {
-  //       orderBy: { createdAt: 'desc' },
-  //       take: 10,
-  //     },
-  //   },
-  // });
-
-  const user = {
-    id: '1',
-    name: 'Nguyễn Văn A',
-    email: 'a@example.com',
-    wallet: {
-      id: '1',
-      balance: 100000,
-    },
-    transactions: [
-      {
-        id: 1,
-        type: 'topup',
-        amount: 100000,
-        createdAt: new Date(),
-      },
-    ],
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    router.push('/login');
   };
 
-  // if (!user || !user.wallet) {
-  //   return <div>Lỗi: Không tìm thấy thông tin ví</div>;
-  // }
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        const userRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/users/`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+        const userData = userRes.data?.data?.user;
+        setUser(userData);
 
-  const { wallet, transactions } = user;
+        const walletRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/wallets/`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+        setWallet(walletRes.data?.data?.wallet);
+
+        const transactionsRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/transactions/`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+        setTransactions(transactionsRes.data?.data?.transactions || []);
+      } catch (err) {
+        setError('Lỗi: Không thể lấy dữ liệu từ máy chủ');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  if (loading)
+    return (
+      <div className="container mx-auto p-6 max-w-6xl">
+        <Skeleton className="h-10 w-64 mb-8" />
+        <Skeleton className="h-24 w-full mb-10 rounded-xl" />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+        </div>
+
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Alert variant="destructive">
+          <AlertTitle>Lỗi</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  if (!user || !wallet)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Alert variant="destructive">
+          <AlertTitle>Lỗi</AlertTitle>
+          <AlertDescription>
+            Không tìm thấy thông tin người dùng hoặc ví
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+
   const transactionsForTable = transactions.map((tx) => ({
     ...tx,
     createdAt:
@@ -50,7 +111,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Chào mừng, {user.name}!</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        Chào mừng, {user ? user.name : '...'}!
+      </h1>
 
       <BalanceCard balance={Number(wallet.balance)} />
 
@@ -74,6 +137,12 @@ export default async function DashboardPage() {
       <TransactionTable transactions={transactionsForTable} />
 
       <TransactionDialogs balance={Number(wallet.balance)} />
+
+      <div className="flex justify-end mt-8">
+        <Button variant="destructive" onClick={handleLogout}>
+          Đăng xuất
+        </Button>
+      </div>
     </div>
   );
 }
