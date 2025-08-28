@@ -1,26 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { CreateWalletDto } from './dto/create-wallet.dto';
-import { UpdateWalletDto } from './dto/update-wallet.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/core/prisma/prisma.service';
 
 @Injectable()
 export class WalletsService {
-  create(createWalletDto: CreateWalletDto) {
-    return 'This action adds a new wallet';
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all wallets`;
-  }
+  async findOne({ id }: { id: string }) {
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { userId: id },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} wallet`;
-  }
+    if (!wallet) {
+      throw new BadRequestException(
+        'Người dùng chưa tạo tài khoản hoặc chưa đăng nhập',
+      );
+    }
 
-  update(id: number, updateWalletDto: UpdateWalletDto) {
-    return `This action updates a #${id} wallet`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} wallet`;
+    return {
+      message: 'Lấy thông tin ví thành công',
+      wallet,
+    };
   }
 }

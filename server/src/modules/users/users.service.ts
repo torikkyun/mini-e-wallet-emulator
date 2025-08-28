@@ -1,26 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { PrismaService } from 'src/core/prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findOne({ id }: { id: string }) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    return {
+      message: 'Lấy thông tin người dùng thành công',
+      user,
+    };
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
+  async update({ id }: { id: string }, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: updateUserDto,
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    return {
+      message: 'Cập nhật thông tin người dùng thành công',
+      user,
+    };
   }
 }
