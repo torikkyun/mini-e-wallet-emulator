@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const [wallet, setWallet] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(2);
+  const [limit, setLimit] = useState(10);
   const [type, setType] = useState('');
   const [searchEmail, setSearchEmail] = useState('');
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
