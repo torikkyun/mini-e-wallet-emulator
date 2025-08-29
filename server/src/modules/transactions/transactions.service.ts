@@ -3,21 +3,36 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { TransactionType } from 'generated/prisma';
+import { Prisma, TransactionType } from 'generated/prisma';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { TopupDto } from './dto/topup.dto';
 import { TransferDto } from './dto/transfer.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { SearchTransactionDto } from './dto/search-transaction.dto';
 
 @Injectable()
 export class TransactionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllByUserId(userId: string) {
-    return {
-      message: 'Lấy lịch sử giao dịch thành công',
-      transactions: await this.prisma.transaction.findMany({
-        where: { userId },
+  async findAllByUserId(
+    { id }: { id: string },
+    { page = 1, limit = 10, type, email }: SearchTransactionDto,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.TransactionWhereInput = {
+      userId: id,
+      ...(type && { type }),
+      ...(email && {
+        toUser: {
+          email: { contains: email, mode: 'insensitive' },
+        },
+      }),
+    };
+
+    const [transactions, total] = await Promise.all([
+      this.prisma.transaction.findMany({
+        where,
         include: {
           toUser: {
             select: {
@@ -26,7 +41,22 @@ export class TransactionsService {
             },
           },
         },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
       }),
+      this.prisma.transaction.count({ where }),
+    ]);
+
+    return {
+      message: 'Lấy lịch sử giao dịch thành công',
+      transactions,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -137,7 +167,7 @@ export class TransactionsService {
           toUserId: id,
           type: TransactionType.transferIn,
           amount,
-          description,
+          description: 'Nhận tiền từ tài khoản khác',
         },
       });
 

@@ -10,13 +10,29 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(2);
+  const [type, setType] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const [debouncedEmail, setDebouncedEmail] = useState(searchEmail);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [loadingTable, setLoadingTable] = useState(false);
+
   const router = useRouter();
 
   const handleLogout = () => {
@@ -28,6 +44,27 @@ export default function DashboardPage() {
     setLoading(true);
     setError('');
     fetchAll();
+  };
+
+  const fetchTransactions = async (params = {}) => {
+    setLoadingTable(true);
+    const accessToken = localStorage.getItem('accessToken');
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/transactions/`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: {
+          page,
+          limit,
+          type: type || undefined,
+          email: debouncedEmail || undefined,
+          ...params,
+        },
+      },
+    );
+    setTransactions(res.data?.data?.transactions || []);
+    setPagination(res.data?.data?.pagination || { total: 0, totalPages: 1 });
+    setLoadingTable(false);
   };
 
   const fetchAll = async () => {
@@ -54,15 +91,7 @@ export default function DashboardPage() {
       );
       setWallet(walletRes.data?.data?.wallet);
 
-      const transactionsRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/transactions/`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-      setTransactions(transactionsRes.data?.data?.transactions || []);
+      await fetchTransactions();
     } catch (err) {
       setError('Lỗi: Không thể lấy dữ liệu từ máy chủ');
     } finally {
@@ -73,6 +102,17 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [page, limit, type, debouncedEmail]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedEmail(searchEmail);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchEmail]);
 
   if (loading)
     return (
@@ -141,7 +181,66 @@ export default function DashboardPage() {
           action="transfer"
         />
       </div>
-      <TransactionTable transactions={transactionsForTable} />
+
+      <div className="flex flex-wrap gap-4 mb-4">
+        <Select
+          value={type === '' ? 'all' : type}
+          onValueChange={(value) => {
+            setType(value === 'all' ? '' : value);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Tất cả loại" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả loại</SelectItem>
+            <SelectItem value="topup">Nạp tiền</SelectItem>
+            <SelectItem value="withdraw">Rút tiền</SelectItem>
+            <SelectItem value="transferOut">Chuyển tiền</SelectItem>
+            <SelectItem value="transferIn">Nhận tiền</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          type="text"
+          placeholder="Tìm theo email"
+          value={searchEmail}
+          onChange={(e) => {
+            setSearchEmail(e.target.value);
+            setPage(1);
+          }}
+          className="w-[200px]"
+        />
+      </div>
+      <TransactionTable
+        transactions={transactionsForTable}
+        loading={loadingTable}
+      />
+      <div className="flex justify-end mt-2 gap-2">
+        <Button
+          variant="outline"
+          disabled={page <= 1}
+          onClick={() => {
+            setPage(page - 1);
+            fetchTransactions({ page: page - 1 });
+          }}
+        >
+          Trước
+        </Button>
+        <span className="flex items-center px-2 text-sm">
+          Trang {page} / {pagination.totalPages}
+        </span>
+        <Button
+          variant="outline"
+          disabled={page >= pagination.totalPages}
+          onClick={() => {
+            setPage(page + 1);
+            fetchTransactions({ page: page + 1 });
+          }}
+        >
+          Sau
+        </Button>
+      </div>
 
       <TransactionDialogs
         balance={Number(wallet.balance)}

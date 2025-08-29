@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TopupDto } from './dto/topup.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { TransferDto } from './dto/transfer.dto';
+import { SearchTransactionDto } from './dto/search-transaction.dto';
 
 @Controller('api/transactions')
 @ApiTags('transactions')
@@ -13,8 +14,11 @@ export class TransactionsController {
 
   @Get()
   @ApiBearerAuth()
-  getTransactionHistory(@CurrentUser() user: { id: string }) {
-    return this.transactionsService.findAllByUserId(user.id);
+  getTransactionHistory(
+    @CurrentUser() user: { id: string },
+    @Query() searchTransactionDto: SearchTransactionDto,
+  ) {
+    return this.transactionsService.findAllByUserId(user, searchTransactionDto);
   }
 
   @Post('topup')
