@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { Menu } from 'lucide-react';
 import BalanceCard from './components/balance-card';
 import ActionCard from './components/action-card';
 import TransactionTable from './components/transaction-table';
 import { TransactionDialogs } from './components/transaction-dialogs';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -32,6 +34,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingTable, setLoadingTable] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const router = useRouter();
 
@@ -116,17 +119,25 @@ export default function DashboardPage() {
 
   if (loading)
     return (
-      <div className="container mx-auto p-6 max-w-6xl">
-        <Skeleton className="h-10 w-64 mb-8" />
-        <Skeleton className="h-24 w-full mb-10 rounded-xl" />
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
-        </div>
-
-        <Skeleton className="h-64 w-full rounded-xl" />
+      <div className="flex h-screen">
+        <main className="flex-1 overflow-y-auto container mx-auto p-6 max-w-6xl pt-16 md:pt-6">
+          <Skeleton className="h-10 w-48 mb-8" />
+          <Skeleton className="h-24 w-full mb-10 rounded-xl" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </div>
+          <div className="flex flex-wrap gap-4 mb-4">
+            <Skeleton className="h-10 w-[160px]" />
+            <Skeleton className="h-10 w-[200px]" />
+          </div>
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <div className="flex justify-end mt-2 gap-2">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-20" />
+          </div>
+        </main>
       </div>
     );
   if (error)
@@ -157,13 +168,11 @@ export default function DashboardPage() {
   }));
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <>
       <h1 className="text-3xl font-bold mb-8">
         Chào mừng, {user ? user.name : '...'}!
       </h1>
-
       <BalanceCard balance={Number(wallet.balance)} />
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10">
         <ActionCard
           title="Nạp tiền"
@@ -181,7 +190,6 @@ export default function DashboardPage() {
           action="transfer"
         />
       </div>
-
       <div className="flex flex-wrap gap-4 mb-4">
         <Select
           value={type === '' ? 'all' : type}
@@ -241,17 +249,10 @@ export default function DashboardPage() {
           Sau
         </Button>
       </div>
-
       <TransactionDialogs
         balance={Number(wallet.balance)}
         onSuccess={reloadData}
       />
-
-      <div className="flex justify-end mt-8">
-        <Button variant="destructive" onClick={handleLogout}>
-          Đăng xuất
-        </Button>
-      </div>
-    </div>
+    </>
   );
 }

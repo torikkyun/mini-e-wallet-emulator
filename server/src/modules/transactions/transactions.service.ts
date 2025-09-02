@@ -118,7 +118,6 @@ export class TransactionsService {
     { id }: { id: string },
     { email, amount, description }: TransferDto,
   ) {
-    // Tìm user nhận qua email
     const toUser = await this.prisma.user.findUnique({
       where: { email },
     });
