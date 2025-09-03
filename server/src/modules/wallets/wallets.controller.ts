@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { WalletsService } from './wallets.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 
 @Controller('api/wallets')
 @ApiTags('wallets')

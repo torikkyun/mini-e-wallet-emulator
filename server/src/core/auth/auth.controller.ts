@@ -1,9 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { Public } from 'src/common/decorators/public.decorator';
+import { LoginAuthDto } from './dto/login-auth.dto';
+import { RegisterAuthDto } from './dto/register-auth.dto';
+import { Public } from '@common/decorators/public.decorator';
+import { User } from 'generated/prisma';
 
 @Controller('api/auth')
 @Public()
@@ -12,12 +13,19 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(@Body() registerAuthDto: RegisterAuthDto): Promise<{
+    message: string;
+    email: string;
+  }> {
+    return this.authService.register(registerAuthDto);
   }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginAuthDto: LoginAuthDto): Promise<{
+    message: string;
+    accessToken: string;
+    user: Omit<User, 'password'>;
+  }> {
+    return this.authService.login(loginAuthDto);
   }
 }

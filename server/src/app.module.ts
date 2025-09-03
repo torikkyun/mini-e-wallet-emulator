@@ -1,11 +1,10 @@
+import { AuthModule } from '@core/auth/auth.module';
+import { JwtGuard } from '@core/auth/guards/jwt.guard';
+import { TransactionsModule } from '@modules/transactions/transactions.module';
+import { UsersModule } from '@modules/users/users.module';
+import { WalletsModule } from '@modules/wallets/wallets.module';
 import { Module } from '@nestjs/common';
-import { AuthModule } from './core/auth/auth.module';
-import { UsersModule } from './modules/users/users.module';
 import { ConfigModule } from '@nestjs/config';
-import { WalletsModule } from './modules/wallets/wallets.module';
-import { TransactionsModule } from './modules/transactions/transactions.module';
-import { JwtGuard } from './core/auth/guards/jwt.guard';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -21,7 +20,7 @@ import { APP_GUARD } from '@nestjs/core';
   ],
   providers: [
     {
-      provide: APP_GUARD,
+      provide: 'APP_GUARD',
       useClass: JwtGuard,
     },
   ],

@@ -1,8 +1,8 @@
 import { Controller, Get, Body, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 
 @Controller('api/users')
 @ApiTags('users')

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { LoginDto } from './login.dto';
+import { LoginAuthDto } from './login-auth.dto';
 
-export class RegisterDto extends LoginDto {
+export class RegisterAuthDto extends LoginAuthDto {
   @ApiProperty({ example: 'Trần Đình Phúc Đức' })
   name: string;
 }

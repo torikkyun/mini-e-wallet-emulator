@@ -4,16 +4,16 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgres"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   name      String
   email     String   @unique
   password  String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   wallet    Wallet?
 
   transactions         Transaction[] @relation("UserTransactions")
@@ -23,8 +23,8 @@ model User {
 }
 
 model Wallet {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  userId   String @unique @db.ObjectId
+  id       String @id @default(uuid())
+  userId   String @unique @map("user_id")
   balance  Int    @default(0)
   currency String @default("VND")
 
@@ -34,13 +34,13 @@ model Wallet {
 }
 
 model Transaction {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
   type        String
   amount      Int
-  toUserId    String?  @db.ObjectId
+  toUserId    String?  @map("to_user_id")
   description String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user   User  @relation("UserTransactions", fields: [userId], references: [id])
   toUser User? @relation("ReceiverTransactions", fields: [toUserId], references: [id])
@@ -51,6 +51,6 @@ model Transaction {
 enum TransactionType {
   topup
   withdraw
-  transferOut
-  transferIn
+  transferOut @map("transfer_out")
+  transferIn  @map("transfer_in")
 }

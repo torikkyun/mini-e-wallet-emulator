@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, TransactionType } from 'generated/prisma';
-import { PrismaService } from 'src/core/prisma/prisma.service';
 import { TopupDto } from './dto/topup.dto';
 import { TransferDto } from './dto/transfer.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { SearchTransactionDto } from './dto/search-transaction.dto';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 @Injectable()
 export class TransactionsService {
