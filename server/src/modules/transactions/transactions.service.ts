@@ -16,10 +16,8 @@ export class TransactionsService {
 
   async findAllByUserId(
     { id }: { id: string },
-    { page = 1, limit = 10, type, email }: SearchTransactionDto,
+    { page = 1, limit = 10, skip, type, email }: SearchTransactionDto,
   ) {
-    const skip = (page - 1) * limit;
-
     const where: Prisma.TransactionWhereInput = {
       userId: id,
       ...(type && { type }),
@@ -66,19 +64,20 @@ export class TransactionsService {
     });
     if (!wallet) throw new NotFoundException('Wallet not found');
 
-    const transaction = await this.prisma.transaction.create({
-      data: {
-        userId: id,
-        type: TransactionType.topup,
-        amount,
-        description,
-      },
-    });
-
-    await this.prisma.wallet.update({
-      where: { userId: id },
-      data: { balance: { increment: amount } },
-    });
+    const [transaction] = await this.prisma.$transaction([
+      this.prisma.transaction.create({
+        data: {
+          userId: id,
+          type: TransactionType.topup,
+          amount,
+          description,
+        },
+      }),
+      this.prisma.wallet.update({
+        where: { userId: id },
+        data: { balance: { increment: amount } },
+      }),
+    ]);
 
     return {
       message: 'Nạp tiền thành công',
@@ -94,19 +93,20 @@ export class TransactionsService {
     if (wallet.balance < amount)
       throw new BadRequestException('Số dư không đủ');
 
-    const transaction = await this.prisma.transaction.create({
-      data: {
-        userId: id,
-        type: TransactionType.withdraw,
-        amount,
-        description,
-      },
-    });
-
-    await this.prisma.wallet.update({
-      where: { userId: id },
-      data: { balance: { decrement: amount } },
-    });
+    const [transaction] = await this.prisma.$transaction([
+      this.prisma.transaction.create({
+        data: {
+          userId: id,
+          type: TransactionType.withdraw,
+          amount,
+          description,
+        },
+      }),
+      this.prisma.wallet.update({
+        where: { userId: id },
+        data: { balance: { decrement: amount } },
+      }),
+    ]);
 
     return {
       message: 'Rút tiền thành công',
@@ -126,31 +126,20 @@ export class TransactionsService {
     if (id === toUser.id)
       throw new BadRequestException('Không thể chuyển cho chính mình');
 
-    return await this.prisma.$transaction(async (prisma) => {
-      const fromWallet = await prisma.wallet.findUnique({
-        where: { userId: id },
-      });
-      if (!fromWallet)
-        throw new NotFoundException('Ví người gửi không tồn tại');
-      if (fromWallet.balance < amount)
-        throw new BadRequestException('Số dư không đủ');
+    const fromWallet = await this.prisma.wallet.findUnique({
+      where: { userId: id },
+    });
+    if (!fromWallet) throw new NotFoundException('Ví người gửi không tồn tại');
+    if (fromWallet.balance < amount)
+      throw new BadRequestException('Số dư không đủ');
 
-      const toWallet = await prisma.wallet.findUnique({
-        where: { userId: toUser.id },
-      });
-      if (!toWallet) throw new NotFoundException('Ví người nhận không tồn tại');
+    const toWallet = await this.prisma.wallet.findUnique({
+      where: { userId: toUser.id },
+    });
+    if (!toWallet) throw new NotFoundException('Ví người nhận không tồn tại');
 
-      await prisma.wallet.update({
-        where: { userId: id },
-        data: { balance: { decrement: amount } },
-      });
-
-      await prisma.wallet.update({
-        where: { userId: toUser.id },
-        data: { balance: { increment: amount } },
-      });
-
-      const transferOut = await prisma.transaction.create({
+    const [transferOut] = await this.prisma.$transaction([
+      this.prisma.transaction.create({
         data: {
           userId: id,
           toUserId: toUser.id,
@@ -158,9 +147,8 @@ export class TransactionsService {
           amount,
           description,
         },
-      });
-
-      await prisma.transaction.create({
+      }),
+      this.prisma.transaction.create({
         data: {
           userId: toUser.id,
           toUserId: id,
@@ -168,12 +156,20 @@ export class TransactionsService {
           amount,
           description: 'Nhận tiền từ tài khoản khác',
         },
-      });
+      }),
+      this.prisma.wallet.update({
+        where: { userId: id },
+        data: { balance: { decrement: amount } },
+      }),
+      this.prisma.wallet.update({
+        where: { userId: toUser.id },
+        data: { balance: { increment: amount } },
+      }),
+    ]);
 
-      return {
-        message: 'Chuyển tiền thành công',
-        transaction: transferOut,
-      };
-    });
+    return {
+      message: 'Chuyển tiền thành công',
+      transaction: transferOut,
+    };
   }
 }

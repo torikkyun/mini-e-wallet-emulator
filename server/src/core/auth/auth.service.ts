@@ -37,9 +37,7 @@ export class AuthService {
         email,
         password: hashedPassword,
         wallet: {
-          create: {
-            currency: 'VND',
-          },
+          create: {},
         },
       },
     });
