@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { useUser } from './components/user-context';
+import { useWallet } from './components/wallet-context';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
-  const [wallet, setWallet] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -31,11 +31,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingTable, setLoadingTable] = useState(false);
+  const user = useUser();
+  const { wallet, reloadWallet } = useWallet();
 
   const reloadData = () => {
     setLoading(true);
     setError('');
-    fetchAll();
   };
 
   const fetchTransactions = async (params = {}) => {
@@ -57,47 +58,19 @@ export default function DashboardPage() {
     setTransactions(res.data?.data?.transactions || []);
     setPagination(res.data?.data?.pagination || { total: 0, totalPages: 1 });
     setLoadingTable(false);
+    setLoading(false);
   };
-
-  const fetchAll = async () => {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-      const userRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-      const userData = userRes.data?.data?.user;
-      setUser(userData);
-
-      const walletRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/wallets/`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-      setWallet(walletRes.data?.data?.wallet);
-
-      await fetchTransactions();
-    } catch (err) {
-      setError('Lỗi: Không thể lấy dữ liệu từ máy chủ');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAll();
-  }, []);
 
   useEffect(() => {
     fetchTransactions();
   }, [page, limit, type, debouncedEmail]);
+
+  useEffect(() => {
+    if (loading && wallet) {
+      fetchTransactions();
+      setLoading(false);
+    }
+  }, [wallet, loading]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -106,7 +79,7 @@ export default function DashboardPage() {
     return () => clearTimeout(handler);
   }, [searchEmail]);
 
-  if (loading)
+  if (!user || !wallet || loading)
     return (
       <div className="flex h-screen">
         <main className="flex-1 overflow-y-auto p-6 pt-6">
@@ -240,7 +213,10 @@ export default function DashboardPage() {
       </div>
       <TransactionDialogs
         balance={Number(wallet.balance)}
-        onSuccess={reloadData}
+        onSuccess={async () => {
+          reloadData();
+          await reloadWallet();
+        }}
       />
     </>
   );

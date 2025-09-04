@@ -1,10 +1,11 @@
 import { Menu } from 'lucide-react';
+import { UserType } from './user-context';
 
 export default function DashboardHeader({
   user,
   onMenuClick,
 }: {
-  user: { name: string; avatarUrl: string };
+  user: UserType | null;
   onMenuClick?: () => void;
 }) {
   return (
@@ -27,10 +28,12 @@ export default function DashboardHeader({
         Mini E-Wallet
       </span>
       <div className="flex items-center gap-3">
-        <span className="font-medium hidden sm:block">{user.name}</span>
+        <span className="font-medium hidden sm:block">
+          {user ? user.name : 'Đang tải...'}
+        </span>
         <img
-          src={user.avatarUrl}
-          alt={user.name}
+          src={user && user.avatar ? user.avatar : '/default-avatar.png'}
+          alt={user ? user.name : 'avatar'}
           className="w-9 h-9 rounded-full border"
         />
       </div>
