@@ -36,7 +36,7 @@ export class AuthService {
         name,
         email,
         password: hashedPassword,
-        wallet: {
+        Wallet: {
           create: {},
         },
       },

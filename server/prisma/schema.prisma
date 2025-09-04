@@ -15,10 +15,10 @@ model User {
   password  String
   avatar    String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  wallet    Wallet?
+  Wallet    Wallet?
 
-  transactions         Transaction[] @relation("UserTransactions")
-  receivedTransactions Transaction[] @relation("ReceiverTransactions")
+  Transactions         Transaction[] @relation("UserTransactions")
+  ReceivedTransactions Transaction[] @relation("ReceiverTransactions")
 
   @@map("users")
 }
