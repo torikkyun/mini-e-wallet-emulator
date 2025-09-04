@@ -1,8 +1,17 @@
-import { Controller, Get, Body, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileValidationPipe } from '@common/pipes/file-validation.pipe';
 
 @Controller('api/users')
 @ApiTags('users')
@@ -16,11 +25,14 @@ export class UsersController {
   }
 
   @Patch()
+  @UseInterceptors(FileInterceptor('avatar'))
   @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
   update(
     @CurrentUser() user: { id: string },
     @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile(new FileValidationPipe()) avatar?: Express.Multer.File,
   ) {
-    return this.usersService.update(user, updateUserDto);
+    return this.usersService.update(user, updateUserDto, avatar);
   }
 }

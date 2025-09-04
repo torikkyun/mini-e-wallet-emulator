@@ -38,9 +38,7 @@ export default function DashboardLayout({
             <Sidebar current="" onNavigate={() => setSidebarOpen(false)} />
           </SheetContent>
         </Sheet>
-        <main className="flex-1 overflow-y-auto container mx-auto p-6 max-w-6xl pt-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto p-6 pt-6">{children}</main>
       </div>
       <DashboardFooter />
     </div>

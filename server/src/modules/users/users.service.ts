@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async findOne({ id }: { id: string }) {
     const user = await this.prisma.user.findUnique({
@@ -17,10 +21,19 @@ export class UsersService {
     };
   }
 
-  async update({ id }: { id: string }, updateUserDto: UpdateUserDto) {
+  async update(
+    { id }: { id: string },
+    updateUserDto: UpdateUserDto,
+    avatar?: Express.Multer.File,
+  ) {
     const user = await this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data: {
+        ...updateUserDto,
+        avatar: avatar
+          ? `${this.configService.get('STATIC_URL')}/avatars/${avatar.filename}`
+          : undefined,
+      },
     });
 
     return {

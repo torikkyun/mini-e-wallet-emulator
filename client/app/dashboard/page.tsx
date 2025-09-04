@@ -1,8 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
 import BalanceCard from './components/balance-card';
 import ActionCard from './components/action-card';
 import TransactionTable from './components/transaction-table';
@@ -19,7 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -34,14 +31,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingTable, setLoadingTable] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const router = useRouter();
-
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    router.push('/login');
-  };
 
   const reloadData = () => {
     setLoading(true);
@@ -120,7 +109,7 @@ export default function DashboardPage() {
   if (loading)
     return (
       <div className="flex h-screen">
-        <main className="flex-1 overflow-y-auto container mx-auto p-6 max-w-6xl pt-16 md:pt-6">
+        <main className="flex-1 overflow-y-auto p-6 pt-6">
           <Skeleton className="h-10 w-48 mb-8" />
           <Skeleton className="h-24 w-full mb-10 rounded-xl" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
