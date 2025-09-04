@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: prisma-postgres
+      POSTGRES_DB: mini-e-wallet-emulator
     ports:
       - "5433:5432"
     volumes:
