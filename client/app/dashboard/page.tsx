@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingTable, setLoadingTable] = useState(false);
-  const user = useUser();
+  const { user } = useUser();
   const { wallet, reloadWallet } = useWallet();
 
   const reloadData = () => {

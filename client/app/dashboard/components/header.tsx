@@ -1,5 +1,13 @@
 import { Menu } from 'lucide-react';
 import { UserType } from './user-context';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardHeader({
   user,
@@ -8,6 +16,17 @@ export default function DashboardHeader({
   user: UserType | null;
   onMenuClick?: () => void;
 }) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    router.push('/login');
+  };
+
+  const handleProfile = () => {
+    router.push('/dashboard/profile');
+  };
+
   return (
     <header
       className="
@@ -28,14 +47,29 @@ export default function DashboardHeader({
         Mini E-Wallet
       </span>
       <div className="flex items-center gap-3">
-        <span className="font-medium hidden sm:block">
-          {user ? user.name : 'Đang tải...'}
-        </span>
-        <img
-          src={user && user.avatar ? user.avatar : '/default-avatar.png'}
-          alt={user ? user.name : 'avatar'}
-          className="w-9 h-9 rounded-full border"
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-2 cursor-pointer bg-transparent border-none p-0">
+              <span className="font-medium hidden sm:block">
+                {user ? user.name : 'Đang tải...'}
+              </span>
+              <img
+                src={user && user.avatar ? user.avatar : '/default-avatar.png'}
+                alt={user ? user.name : 'avatar'}
+                className="w-9 h-9 rounded-full border cursor-pointer"
+              />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleProfile}>
+              Thông tin cá nhân
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              Đăng xuất
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DialogTitle } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { UserContext, UserType } from './components/user-context';
+import { UserProvider, UserType } from './components/user-context';
 import { WalletContext, WalletType } from './components/wallet-context';
 
 export default function DashboardLayout({
@@ -55,7 +55,7 @@ export default function DashboardLayout({
   }, []);
 
   return (
-    <UserContext.Provider value={user}>
+    <UserProvider user={user} setUser={setUser}>
       <WalletContext.Provider value={{ wallet, reloadWallet: fetchWallet }}>
         <div className="h-screen flex flex-col">
           <DashboardHeader
@@ -82,6 +82,6 @@ export default function DashboardLayout({
           <DashboardFooter />
         </div>
       </WalletContext.Provider>
-    </UserContext.Provider>
+    </UserProvider>
   );
 }
