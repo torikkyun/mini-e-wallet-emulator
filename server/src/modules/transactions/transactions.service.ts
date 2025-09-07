@@ -9,6 +9,7 @@ import { TransferDto } from './dto/transfer.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { SearchTransactionDto } from './dto/search-transaction.dto';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { PaginatedResponseDto } from '@common/dtos/pagination.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -17,7 +18,7 @@ export class TransactionsService {
   async findAllByUserId(
     { id }: { id: string },
     { page = 1, limit = 10, skip, type, email }: SearchTransactionDto,
-  ) {
+  ): Promise<PaginatedResponseDto<Prisma.TransactionGetPayload<object>>> {
     const where: Prisma.TransactionWhereInput = {
       userId: id,
       ...(type && { type }),
@@ -48,7 +49,7 @@ export class TransactionsService {
 
     return {
       message: 'Lấy lịch sử giao dịch thành công',
-      transactions,
+      data: transactions,
       pagination: {
         total,
         page,
@@ -58,7 +59,13 @@ export class TransactionsService {
     };
   }
 
-  async topup({ id }: { id: string }, { amount, description }: TopupDto) {
+  async topup(
+    { id }: { id: string },
+    { amount, description }: TopupDto,
+  ): Promise<{
+    message: string;
+    transaction: Prisma.TransactionGetPayload<object>;
+  }> {
     const wallet = await this.prisma.wallet.findUnique({
       where: { userId: id },
     });
@@ -85,7 +92,13 @@ export class TransactionsService {
     };
   }
 
-  async withdraw({ id }: { id: string }, { amount, description }: WithdrawDto) {
+  async withdraw(
+    { id }: { id: string },
+    { amount, description }: WithdrawDto,
+  ): Promise<{
+    message: string;
+    transaction: Prisma.TransactionGetPayload<object>;
+  }> {
     const wallet = await this.prisma.wallet.findUnique({
       where: { userId: id },
     });
@@ -117,7 +130,10 @@ export class TransactionsService {
   async transfer(
     { id }: { id: string },
     { email, amount, description }: TransferDto,
-  ) {
+  ): Promise<{
+    message: string;
+    transaction: Prisma.TransactionGetPayload<object>;
+  }> {
     const toUser = await this.prisma.user.findUnique({
       where: { email },
     });

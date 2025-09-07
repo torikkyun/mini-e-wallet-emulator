@@ -43,10 +43,42 @@ model Transaction {
   description String?
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user   User  @relation("UserTransactions", fields: [userId], references: [id])
-  toUser User? @relation("ReceiverTransactions", fields: [toUserId], references: [id])
+  user        User         @relation("UserTransactions", fields: [userId], references: [id])
+  toUser      User?        @relation("ReceiverTransactions", fields: [toUserId], references: [id])
+  BillPayment BillPayment?
 
   @@map("transactions")
+}
+
+model BillPayment {
+  id            String     @id @default(uuid())
+  transactionId String     @unique @map("transaction_id")
+  billType      BillType   @map("bill_type")
+  providerId    String     @map("provider_id")
+  customerCode  String     @map("customer_code")
+  amount        Int
+  description   String?
+  status        BillStatus @default(pending)
+  paidAt        DateTime?  @map("paid_at") @db.Timestamptz(6)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  transaction Transaction     @relation(fields: [transactionId], references: [id])
+  provider    ServiceProvider @relation(fields: [providerId], references: [id])
+
+  @@map("bill_payments")
+}
+
+model ServiceProvider {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  code      String     @unique
+  billTypes BillType[] @default([]) @map("bill_types")
+  isActive  Boolean    @default(true) @map("is_active")
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  BillPayments BillPayment[]
+
+  @@map("service_providers")
 }
 
 enum TransactionType {
@@ -54,4 +86,20 @@ enum TransactionType {
   withdraw
   transferOut @map("transfer_out")
   transferIn  @map("transfer_in")
+  payBill     @map("pay_bill")
+}
+
+enum BillType {
+  electricity
+  water
+  telecom
+  internet
+  tv
+}
+
+enum BillStatus {
+  pending
+  success
+  failed
+  cancelled
 }

@@ -5,6 +5,8 @@ import { UsersModule } from '@modules/users/users.module';
 import { WalletsModule } from '@modules/wallets/wallets.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { BillPaymentsModule } from './modules/bill-payments/bill-payments.module';
+import { ServiceProvidersModule } from './modules/service-providers/service-providers.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { ConfigModule } from '@nestjs/config';
     UsersModule,
     WalletsModule,
     TransactionsModule,
+    BillPaymentsModule,
+    ServiceProvidersModule,
   ],
   providers: [
     {

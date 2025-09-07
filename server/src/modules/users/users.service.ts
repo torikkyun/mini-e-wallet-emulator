@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class UsersService {
@@ -10,10 +11,18 @@ export class UsersService {
     private readonly configService: ConfigService,
   ) {}
 
-  async findOne({ id }: { id: string }) {
+  async findOne({ id }: { id: string }): Promise<{
+    message: string;
+    user: Omit<Prisma.UserGetPayload<object>, 'password'>;
+  }> {
     const user = await this.prisma.user.findUnique({
       where: { id },
+      omit: { password: true },
     });
+
+    if (!user) {
+      throw new BadRequestException('Người dùng không tồn tại');
+    }
 
     return {
       message: 'Lấy thông tin người dùng thành công',
@@ -25,7 +34,7 @@ export class UsersService {
     { id }: { id: string },
     updateUserDto: UpdateUserDto,
     avatar?: Express.Multer.File,
-  ) {
+  ): Promise<{ message: string; user: Prisma.UserGetPayload<object> }> {
     const user = await this.prisma.user.update({
       where: { id },
       data: {

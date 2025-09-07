@@ -30,7 +30,7 @@ export default function Sidebar({
     <aside
       className={cn(
         'relative h-full border-r bg-background flex flex-col transition-all duration-200',
-        collapsed ? 'w-20 p-6' : 'w-64 p-6',
+        collapsed ? 'w-24 py-6 px-3' : 'w-64 p-6',
       )}
       onMouseEnter={() => setShowToggle(true)}
       onMouseLeave={() => setShowToggle(false)}
@@ -65,7 +65,7 @@ export default function Sidebar({
               className={cn(
                 collapsed
                   ? 'flex items-center justify-center w-12 h-12 rounded-md transition-colors hover:bg-muted'
-                  : 'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-muted hover:text-accent-foreground',
+                  : 'flex items-center gap-3 py-2 rounded-lg transition-colors hover:bg-muted hover:text-accent-foreground px-3',
                 current === item.href &&
                   (collapsed
                     ? 'bg-muted text-primary'
