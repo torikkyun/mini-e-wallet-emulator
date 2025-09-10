@@ -26,6 +26,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import getCroppedImg from '@/lib/crop-image';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CreditCard } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, setUser } = useUser();
@@ -216,6 +217,13 @@ export default function ProfilePage() {
                 disabled
                 className="mt-2"
               />
+            </div>
+            <div>
+              <Label>Số tài khoản</Label>
+              <div className="mt-2 flex items-center gap-2 text-muted-foreground font-mono text-sm">
+                <CreditCard className="w-4 h-4" />
+                {user.accountNumber}
+              </div>
             </div>
             <div>
               <Label>Ngày tạo tài khoản</Label>

@@ -33,6 +33,8 @@ export default function TransactionTable({
         return 'Chuyển tiền';
       case 'transferIn':
         return 'Nhận tiền';
+      case 'payBill':
+        return 'Thanh toán hóa đơn';
       default:
         return type;
     }

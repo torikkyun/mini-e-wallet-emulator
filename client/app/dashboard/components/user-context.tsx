@@ -6,6 +6,7 @@ export type UserType = {
   email: string;
   avatar: string;
   createdAt: string;
+  accountNumber: string;
 };
 
 type UserContextType = {

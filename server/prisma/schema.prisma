@@ -9,13 +9,14 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  avatar    String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  Wallet    Wallet?
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  avatar        String?
+  accountNumber String   @unique @map("account_number")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  Wallet        Wallet?
 
   Transactions         Transaction[] @relation("UserTransactions")
   ReceivedTransactions Transaction[] @relation("ReceiverTransactions")
@@ -71,12 +72,13 @@ model BillPayment {
 }
 
 model ServiceProvider {
-  id        String     @id @default(uuid())
-  name      String     @unique
-  code      String     @unique
-  billTypes BillType[] @default([]) @map("bill_types")
-  isActive  Boolean    @default(true) @map("is_active")
-  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  id            String     @id @default(uuid())
+  name          String     @unique
+  code          String     @unique
+  accountNumber String     @unique @map("account_number")
+  billTypes     BillType[] @default([]) @map("bill_types")
+  isActive      Boolean    @default(true) @map("is_active")
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
 
   BillPayments BillPayment[]
 

@@ -17,6 +17,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { useUser } from './components/user-context';
 import { useWallet } from './components/wallet-context';
 
@@ -129,6 +138,108 @@ export default function DashboardPage() {
       tx.createdAt instanceof Date ? tx.createdAt.toISOString() : tx.createdAt,
   }));
 
+  const renderPagination = () => {
+    if (pagination.totalPages <= 1) return null;
+
+    const pages = [];
+    const showEllipsis = pagination.totalPages > 7;
+
+    if (showEllipsis) {
+      if (page <= 4) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis');
+        pages.push(pagination.totalPages);
+      } else if (page >= pagination.totalPages - 3) {
+        pages.push(1);
+        pages.push('ellipsis');
+        for (
+          let i = pagination.totalPages - 4;
+          i <= pagination.totalPages;
+          i++
+        ) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('ellipsis');
+        for (let i = page - 1; i <= page + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis');
+        pages.push(pagination.totalPages);
+      }
+    } else {
+      for (let i = 1; i <= pagination.totalPages; i++) {
+        pages.push(i);
+      }
+    }
+
+    return (
+      <div className="flex flex-col items-center space-y-4 mt-6">
+        <div className="text-sm text-muted-foreground">
+          Hiển thị {Math.min(limit, transactions.length)} trên{' '}
+          {pagination.total} giao dịch
+        </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => {
+                  if (page > 1) {
+                    setPage(page - 1);
+                    fetchTransactions({ page: page - 1 });
+                  }
+                }}
+                className={
+                  page <= 1
+                    ? 'pointer-events-none opacity-50'
+                    : 'cursor-pointer'
+                }
+              />
+            </PaginationItem>
+
+            {pages.map((pageNum, index) => (
+              <PaginationItem key={index}>
+                {pageNum === 'ellipsis' ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    onClick={() => {
+                      setPage(pageNum as number);
+                      fetchTransactions({ page: pageNum as number });
+                    }}
+                    isActive={page === pageNum}
+                    className="cursor-pointer"
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => {
+                  if (page < pagination.totalPages) {
+                    setPage(page + 1);
+                    fetchTransactions({ page: page + 1 });
+                  }
+                }}
+                className={
+                  page >= pagination.totalPages
+                    ? 'pointer-events-none opacity-50'
+                    : 'cursor-pointer'
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    );
+  };
+
   return (
     <>
       <h1 className="text-3xl font-bold mb-8">
@@ -186,31 +297,9 @@ export default function DashboardPage() {
         transactions={transactionsForTable}
         loading={loadingTable}
       />
-      <div className="flex justify-end mt-2 gap-2">
-        <Button
-          variant="outline"
-          disabled={page <= 1}
-          onClick={() => {
-            setPage(page - 1);
-            fetchTransactions({ page: page - 1 });
-          }}
-        >
-          Trước
-        </Button>
-        <span className="flex items-center px-2 text-sm">
-          Trang {page} / {pagination.totalPages}
-        </span>
-        <Button
-          variant="outline"
-          disabled={page >= pagination.totalPages}
-          onClick={() => {
-            setPage(page + 1);
-            fetchTransactions({ page: page + 1 });
-          }}
-        >
-          Sau
-        </Button>
-      </div>
+
+      {renderPagination()}
+
       <TransactionDialogs
         balance={Number(wallet.balance)}
         onSuccess={async () => {

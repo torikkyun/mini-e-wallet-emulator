@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, Wallet } from 'lucide-react';
+import { Menu, User, LogOut, Wallet, CreditCard } from 'lucide-react';
 import { UserType } from './user-context';
 import {
   DropdownMenu,
@@ -51,10 +51,18 @@ export default function DashboardHeader({
       <div className="flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-2 cursor-pointer bg-transparent border-none p-0">
-              <span className="font-medium hidden sm:block">
-                {user ? user.name : 'Đang tải...'}
-              </span>
+            <div className="flex items-center gap-2 cursor-pointer bg-transparent border-none p-0 hover:bg-muted/50 rounded-md px-2 py-1 transition-colors">
+              <div className="flex flex-col items-end">
+                <span className="font-medium text-sm">
+                  {user ? user.name : 'Đang tải...'}
+                </span>
+                {user?.accountNumber && (
+                  <span className="text-xs text-muted-foreground font-mono flex items-center">
+                    <CreditCard className="mr-1 h-4 w-4" />
+                    {user.accountNumber}
+                  </span>
+                )}
+              </div>
               <Avatar className="w-9 h-9 border">
                 <AvatarImage
                   src={
@@ -66,7 +74,7 @@ export default function DashboardHeader({
               </Avatar>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={handleProfile}>
               <User className="w-4 h-4 mr-2" />
               Thông tin cá nhân

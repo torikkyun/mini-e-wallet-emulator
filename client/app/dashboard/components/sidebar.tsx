@@ -7,12 +7,12 @@ const menu = [
   {
     label: 'Trang chủ',
     href: '/dashboard',
-    icon: <Home className="w-5 h-5" />,
+    icon: Home,
   },
   {
     label: 'Thanh toán hóa đơn',
     href: '/dashboard/bills',
-    icon: <FileText className="w-5 h-5" />,
+    icon: FileText,
   },
 ];
 
@@ -30,7 +30,9 @@ export default function Sidebar({
     <aside
       className={cn(
         'relative h-full border-r bg-background flex flex-col transition-all duration-200',
-        collapsed ? 'w-24 py-6 px-3' : 'w-64 p-6',
+        collapsed
+          ? 'w-16 md:w-20 lg:w-24 py-4 md:py-6 px-2 md:px-3'
+          : 'w-48 md:w-56 lg:w-64 p-4 md:p-6',
       )}
       onMouseEnter={() => setShowToggle(true)}
       onMouseLeave={() => setShowToggle(false)}
@@ -41,11 +43,15 @@ export default function Sidebar({
       />
       {showToggle && (
         <button
-          className="absolute top-1/6 -right-4 -translate-y-1/2 z-30 bg-background border rounded-full shadow p-1 transition-opacity hidden md:block"
+          className="absolute top-1/6 -right-3 lg:-right-4 -translate-y-1/2 z-30 bg-background border rounded-full shadow p-1 transition-opacity hidden md:block"
           onClick={() => setCollapsed((c) => !c)}
           tabIndex={-1}
         >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          {collapsed ? (
+            <ChevronRight size={16} className="md:w-5 md:h-5" />
+          ) : (
+            <ChevronLeft size={16} className="md:w-5 md:h-5" />
+          )}
         </button>
       )}
 
@@ -57,25 +63,30 @@ export default function Sidebar({
               : 'flex flex-col gap-1',
           )}
         >
-          {menu.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                collapsed
-                  ? 'flex items-center justify-center w-12 h-12 rounded-md transition-colors hover:bg-muted'
-                  : 'flex items-center gap-3 py-2 rounded-lg transition-colors hover:bg-muted hover:text-accent-foreground px-3',
-                current === item.href &&
-                  (collapsed
-                    ? 'bg-muted text-primary'
-                    : 'bg-muted font-semibold text-primary'),
-              )}
-            >
-              {item.icon}
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
-          ))}
+          {menu.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  collapsed
+                    ? 'flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-md transition-colors hover:bg-muted'
+                    : 'flex items-center gap-2 md:gap-3 py-2 rounded-lg transition-colors hover:bg-muted hover:text-accent-foreground px-2 md:px-3',
+                  current === item.href &&
+                    (collapsed
+                      ? 'bg-muted text-primary'
+                      : 'bg-muted font-semibold text-primary'),
+                )}
+              >
+                <IconComponent className="w-4 h-4 md:w-5 md:h-5" />
+                {!collapsed && (
+                  <span className="text-sm md:text-base">{item.label}</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </aside>

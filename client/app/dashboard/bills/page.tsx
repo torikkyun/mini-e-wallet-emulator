@@ -44,6 +44,15 @@ import {
 import { useUser } from '../components/user-context';
 import { useWallet } from '../components/wallet-context';
 import axios from 'axios';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface Bill {
   id: string;
@@ -63,54 +72,16 @@ const billTypes = [
   { value: 'phone', label: 'Điện thoại', icon: Phone, color: 'bg-green-500' },
 ];
 
-const mockBills: Bill[] = [
-  {
-    id: '1',
-    type: 'electricity',
-    company: 'EVN HCMC',
-    accountNumber: 'PE123456789',
-    amount: 450000,
-    dueDate: '2025-09-15',
-    status: 'pending',
-    description: 'Tiền điện tháng 8/2025',
-  },
-  {
-    id: '2',
-    type: 'water',
-    company: 'Sawaco',
-    accountNumber: 'SW987654321',
-    amount: 180000,
-    dueDate: '2025-09-20',
-    status: 'pending',
-    description: 'Tiền nước tháng 8/2025',
-  },
-  {
-    id: '3',
-    type: 'internet',
-    company: 'FPT Telecom',
-    accountNumber: 'FPT555666777',
-    amount: 300000,
-    dueDate: '2025-09-12',
-    status: 'overdue',
-    description: 'Cước internet tháng 8/2025',
-  },
-  {
-    id: '4',
-    type: 'phone',
-    company: 'Viettel',
-    accountNumber: '0123456789',
-    amount: 150000,
-    dueDate: '2025-08-30',
-    status: 'paid',
-    description: 'Cước điện thoại tháng 8/2025',
-  },
-];
-
 export default function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  // Thêm state cho pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [limit] = useState(9);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -120,13 +91,51 @@ export default function BillsPage() {
   const { wallet, reloadWallet } = useWallet();
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setBills(mockBills);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const fetchBills = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/bill-payments?page=${currentPage}&limit=${limit}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            },
+          },
+        );
+        const apiBills = res.data?.data?.data || [];
+        const pagination = res.data?.data?.pagination || {};
 
+        const mappedBills: Bill[] = apiBills.map((item: any) => ({
+          id: item.id,
+          type: item.billType,
+          company: item.provider?.name || '',
+          accountNumber: item.provider?.accountNumber || '',
+          amount: item.amount,
+          dueDate: item.createdAt,
+          status:
+            item.status === 'success'
+              ? 'paid'
+              : item.status === 'pending'
+                ? 'pending'
+                : 'overdue',
+          description: item.description || '',
+        }));
+
+        setBills(mappedBills);
+        setTotalPages(pagination.totalPages || 1);
+        setTotalItems(pagination.total || 0);
+      } catch (err) {
+        setBills([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
+      setLoading(false);
+    };
+
+    fetchBills();
+  }, [currentPage, limit]); // Thêm currentPage và limit vào dependency
+
+  // Filter chỉ áp dụng trên client-side cho dữ liệu đã load
   const filteredBills = bills.filter((bill) => {
     const matchesSearch =
       bill.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,6 +144,13 @@ export default function BillsPage() {
     const matchesType = selectedType === 'all' || bill.type === selectedType;
     return matchesSearch && matchesType;
   });
+
+  // Reset về page 1 khi filter thay đổi
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [searchTerm, selectedType]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -184,31 +200,126 @@ export default function BillsPage() {
 
     setPaying(true);
     try {
-      // Simulate payment API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const accessToken = localStorage.getItem('accessToken');
 
-      // Update bill status
-      setBills((prev) =>
-        prev.map((bill) =>
-          bill.id === selectedBill.id
-            ? { ...bill, status: 'paid' as const }
-            : bill,
-        ),
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/bill-payments/pay`,
+        {
+          billPaymentId: selectedBill.id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
       );
 
-      setPaymentSuccess(true);
-      await reloadWallet();
+      if (response.data.success) {
+        setBills((prev) =>
+          prev.map((bill) =>
+            bill.id === selectedBill.id
+              ? { ...bill, status: 'paid' as const }
+              : bill,
+          ),
+        );
 
-      setTimeout(() => {
-        setPaymentDialogOpen(false);
-        setPaymentSuccess(false);
-        setSelectedBill(null);
-      }, 2000);
-    } catch (error) {
-      alert('Có lỗi xảy ra khi thanh toán!');
+        setPaymentSuccess(true);
+        await reloadWallet();
+
+        setTimeout(() => {
+          setPaymentDialogOpen(false);
+          setPaymentSuccess(false);
+          setSelectedBill(null);
+        }, 2000);
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || 'Có lỗi xảy ra khi thanh toán!';
+      alert(errorMessage);
     } finally {
       setPaying(false);
     }
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1);
+        pages.push('ellipsis');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('ellipsis');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    }
+
+    return (
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+              className={
+                currentPage <= 1
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+
+          {pages.map((page, index) => (
+            <PaginationItem key={index}>
+              {page === 'ellipsis' ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink
+                  onClick={() => setCurrentPage(page as number)}
+                  isActive={currentPage === page}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              )}
+            </PaginationItem>
+          ))}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                currentPage < totalPages && setCurrentPage(currentPage + 1)
+              }
+              className={
+                currentPage >= totalPages
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
   };
 
   if (loading) {
@@ -266,36 +377,45 @@ export default function BillsPage() {
           const Icon = typeInfo.icon;
 
           return (
-            <Card key={bill.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
+            <Card
+              key={bill.id}
+              className="hover:shadow-md transition-shadow h-full flex flex-col"
+            >
+              <CardHeader className="pb-3 flex-shrink-0">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="flex items-start space-x-2 min-w-0 flex-1">
                     <div
-                      className={`p-2 rounded-lg ${typeInfo.color} text-white`}
+                      className={`p-2 rounded-lg ${typeInfo.color} text-white flex-shrink-0 mt-1`}
                     >
                       <Icon className="h-4 w-4" />
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{bill.company}</CardTitle>
-                      <CardDescription>{typeInfo.label}</CardDescription>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-lg leading-tight line-clamp-2">
+                        {bill.company}
+                      </CardTitle>
+                      <CardDescription className="leading-tight">
+                        {typeInfo.label}
+                      </CardDescription>
                     </div>
                   </div>
-                  {getStatusBadge(bill.status)}
+                  <div className="flex-shrink-0 self-start lg:mt-1">
+                    {getStatusBadge(bill.status)}
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 flex-1 flex flex-col">
                 <div>
                   <Label className="text-sm text-muted-foreground">
                     Số tài khoản
                   </Label>
                   <p className="font-mono text-sm">{bill.accountNumber}</p>
                 </div>
-                <div>
+                <div className="flex-1">
                   <Label className="text-sm text-muted-foreground">Mô tả</Label>
-                  <p className="text-sm">{bill.description}</p>
+                  <p className="text-sm line-clamp-2">{bill.description}</p>
                 </div>
-                <div className="flex justify-between items-center">
-                  <div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2 sm:gap-4">
+                  <div className="flex-shrink-0">
                     <Label className="text-sm text-muted-foreground">
                       Hạn thanh toán
                     </Label>
@@ -303,17 +423,17 @@ export default function BillsPage() {
                       {formatDate(bill.dueDate)}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right flex-shrink-0">
                     <Label className="text-sm text-muted-foreground">
                       Số tiền
                     </Label>
-                    <p className="text-lg font-bold text-primary">
+                    <p className="text-sm font-bold text-primary">
                       {formatCurrency(bill.amount)}
                     </p>
                   </div>
                 </div>
                 <Button
-                  className="w-full"
+                  className="w-full mt-auto"
                   disabled={bill.status === 'paid'}
                   onClick={() => {
                     setSelectedBill(bill);
@@ -328,7 +448,18 @@ export default function BillsPage() {
         })}
       </div>
 
-      {filteredBills.length === 0 && (
+      {/* Pagination */}
+      {!loading && (
+        <div className="flex flex-col items-center space-y-4">
+          <div className="text-sm text-muted-foreground">
+            Hiển thị {Math.min(limit, filteredBills.length)} trên {totalItems}{' '}
+            hóa đơn
+          </div>
+          {renderPagination()}
+        </div>
+      )}
+
+      {filteredBills.length === 0 && !loading && (
         <Card className="text-center py-12">
           <CardContent>
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -344,7 +475,7 @@ export default function BillsPage() {
 
       {/* Payment Dialog */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg md:max-w-xl lg:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <CreditCard className="h-5 w-5" />
@@ -423,7 +554,7 @@ export default function BillsPage() {
                       onClick={handlePayBill}
                       disabled={
                         paying ||
-                        (wallet && wallet.balance < selectedBill.amount)
+                        !!(wallet && wallet.balance < selectedBill.amount)
                       }
                       className="min-w-[100px]"
                     >

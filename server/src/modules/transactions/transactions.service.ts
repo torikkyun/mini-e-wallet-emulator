@@ -129,13 +129,13 @@ export class TransactionsService {
 
   async transfer(
     { id }: { id: string },
-    { email, amount, description }: TransferDto,
+    { accountNumber, amount, description }: TransferDto,
   ): Promise<{
     message: string;
     transaction: Prisma.TransactionGetPayload<object>;
   }> {
     const toUser = await this.prisma.user.findUnique({
-      where: { email },
+      where: { accountNumber },
     });
     if (!toUser) throw new NotFoundException('Người nhận không tồn tại');
 

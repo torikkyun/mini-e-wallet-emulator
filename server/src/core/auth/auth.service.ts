@@ -31,11 +31,19 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let accountNumber: string;
+    do {
+      accountNumber = Math.floor(
+        1000000000 + Math.random() * 9000000000,
+      ).toString();
+    } while (await this.prisma.user.findUnique({ where: { accountNumber } }));
+
     await this.prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
+        accountNumber,
         Wallet: {
           create: {},
         },
