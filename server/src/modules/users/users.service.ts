@@ -34,7 +34,10 @@ export class UsersService {
     { id }: { id: string },
     updateUserDto: UpdateUserDto,
     avatar?: Express.Multer.File,
-  ): Promise<{ message: string; user: Prisma.UserGetPayload<object> }> {
+  ): Promise<{
+    message: string;
+    user: Omit<Prisma.UserGetPayload<object>, 'password'>;
+  }> {
     const user = await this.prisma.user.update({
       where: { id },
       data: {
@@ -43,6 +46,7 @@ export class UsersService {
           ? `${this.configService.get('STATIC_URL')}/avatars/${avatar.filename}`
           : undefined,
       },
+      omit: { password: true },
     });
 
     return {
@@ -50,4 +54,10 @@ export class UsersService {
       user,
     };
   }
+
+  // async changePassword({ id }: { id: string }): Promise<{ message: string }> {
+  //   return {
+  //     message: 'Đổi mật khẩu thành công',
+  //   };
+  // }
 }

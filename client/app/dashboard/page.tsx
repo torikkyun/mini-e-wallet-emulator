@@ -55,7 +55,7 @@ export default function DashboardPage() {
         },
       },
     );
-    setTransactions(res.data?.data?.transactions || []);
+    setTransactions(res.data?.data?.data || []);
     setPagination(res.data?.data?.pagination || { total: 0, totalPages: 1 });
     setLoadingTable(false);
     setLoading(false);

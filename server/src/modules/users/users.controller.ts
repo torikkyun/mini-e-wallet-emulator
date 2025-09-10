@@ -12,7 +12,6 @@ import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { FileValidationPipe } from '@common/pipes/file-validation.pipe';
 import { Prisma } from 'generated/prisma';
-import { FastifyUploadedFile } from '@common/decorators/fastify-uploaded-file.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('api/users')
@@ -39,7 +38,7 @@ export class UsersController {
     @UploadedFile(new FileValidationPipe()) avatar?: Express.Multer.File,
   ): Promise<{
     message: string;
-    user: Prisma.UserGetPayload<object>;
+    user: Omit<Prisma.UserGetPayload<object>, 'password'>;
   }> {
     return this.usersService.update(user, updateUserDto, avatar);
   }
