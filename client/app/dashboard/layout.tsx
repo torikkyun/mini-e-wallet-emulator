@@ -65,7 +65,7 @@ export default function DashboardLayout({
           <div className="flex flex-1 min-h-0">
             {/* Sidebar desktop */}
             <div className="hidden md:flex h-full">
-              <Sidebar current="" />
+              <Sidebar current="" isMobile={false} />
             </div>
             {/* Sidebar mobile (Sheet) */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -74,7 +74,11 @@ export default function DashboardLayout({
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-64">
                 <DialogTitle className="sr-only">Menu</DialogTitle>
-                <Sidebar current="" onNavigate={() => setSidebarOpen(false)} />
+                <Sidebar
+                  current=""
+                  onNavigate={() => setSidebarOpen(false)}
+                  isMobile={true}
+                />
               </SheetContent>
             </Sheet>
             <main className="flex-1 overflow-y-auto p-6 pt-6">{children}</main>
