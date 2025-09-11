@@ -109,9 +109,9 @@ export function LoginForm({
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                 </Button>
-                <Button variant="outline" className="w-full" disabled={loading}>
+                {/* <Button variant="outline" className="w-full" disabled={loading}>
                   Đăng nhập với Google
-                </Button>
+                </Button> */}
               </div>
             </div>
             <div className="mt-4 text-center text-sm">

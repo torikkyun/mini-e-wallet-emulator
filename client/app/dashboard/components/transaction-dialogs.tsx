@@ -24,7 +24,7 @@ export function TransactionDialogs({
 }) {
   const [open, setOpen] = useState<Action | null>(null);
   const [amount, setAmount] = useState('');
-  const [email, setEmail] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -55,8 +55,8 @@ export function TransactionDialogs({
       return;
     }
 
-    if (open === 'transfer' && (!email || email === '')) {
-      toast('Vui lòng nhập email người nhận');
+    if (open === 'transfer' && (!accountNumber || accountNumber === '')) {
+      toast('Vui lòng nhập số tài khoản người nhận');
       setIsSubmitting(false);
       return;
     }
@@ -98,7 +98,7 @@ export function TransactionDialogs({
           `${process.env.NEXT_PUBLIC_API_URL}/transactions/transfer`,
           {
             amount: numAmount,
-            email,
+            accountNumber,
             description: 'Chuyển tiền đến tài khoản khác',
           },
           {
@@ -119,7 +119,7 @@ export function TransactionDialogs({
     setIsSubmitting(false);
     setOpen(null);
     setAmount('');
-    setEmail('');
+    setAccountNumber('');
   };
 
   function formatCurrency(value: string) {
@@ -169,12 +169,12 @@ export function TransactionDialogs({
 
               {open === 'transfer' && (
                 <div className="space-y-3">
-                  <Label>Email người nhận</Label>
+                  <Label>Số tài khoản người nhận</Label>
                   <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="user@example.com"
+                    type="text"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    placeholder="1000000001"
                     required
                   />
                 </div>

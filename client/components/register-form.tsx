@@ -125,14 +125,14 @@ export function RegisterForm({
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Đang đăng ký...' : 'Đăng ký'}
                 </Button>
-                <Button
+                {/* <Button
                   variant="outline"
                   className="w-full"
                   type="button"
                   disabled={loading}
                 >
                   Đăng ký với Google
-                </Button>
+                </Button> */}
               </div>
             </div>
             <div className="mt-4 text-center text-sm">

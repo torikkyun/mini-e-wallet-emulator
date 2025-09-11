@@ -12,7 +12,7 @@ type Transaction = {
   id: number;
   type: string;
   amount: number;
-  toUser?: { name: string; email: string } | null;
+  toUser?: { name: string; accountNumber: string } | null;
   createdAt: string;
 };
 
@@ -98,7 +98,7 @@ export default function TransactionTable({
                 </TableCell>
                 <TableCell>
                   {tx.type === 'transferOut' || tx.type === 'transferIn'
-                    ? tx.toUser?.email || '-'
+                    ? tx.toUser?.accountNumber || '-'
                     : '-'}
                 </TableCell>
               </TableRow>

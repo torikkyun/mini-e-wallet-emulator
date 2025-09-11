@@ -34,9 +34,10 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [type, setType] = useState('');
-  const [searchEmail, setSearchEmail] = useState('');
+  const [searchAccountNumber, setSearchAccountNumber] = useState('');
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
-  const [debouncedEmail, setDebouncedEmail] = useState(searchEmail);
+  const [debouncedAccountNumber, setDebouncedAccountNumber] =
+    useState(searchAccountNumber);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingTable, setLoadingTable] = useState(false);
@@ -59,7 +60,7 @@ export default function DashboardPage() {
           page,
           limit,
           type: type || undefined,
-          email: debouncedEmail || undefined,
+          accountNumber: debouncedAccountNumber || undefined,
           ...params,
         },
       },
@@ -72,7 +73,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchTransactions();
-  }, [page, limit, type, debouncedEmail]);
+  }, [page, limit, type, debouncedAccountNumber]);
 
   useEffect(() => {
     if (loading && wallet) {
@@ -83,10 +84,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedEmail(searchEmail);
+      setDebouncedAccountNumber(searchAccountNumber);
     }, 500);
     return () => clearTimeout(handler);
-  }, [searchEmail]);
+  }, [searchAccountNumber]);
 
   if (!user || !wallet || loading)
     return (
@@ -284,10 +285,10 @@ export default function DashboardPage() {
         </Select>
         <Input
           type="text"
-          placeholder="Tìm theo email"
-          value={searchEmail}
+          placeholder="Tìm theo số tài khoản"
+          value={searchAccountNumber}
           onChange={(e) => {
-            setSearchEmail(e.target.value);
+            setSearchAccountNumber(e.target.value);
             setPage(1);
           }}
           className="w-[200px]"

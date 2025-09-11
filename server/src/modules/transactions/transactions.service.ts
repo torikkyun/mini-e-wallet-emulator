@@ -17,14 +17,14 @@ export class TransactionsService {
 
   async findAllByUserId(
     { id }: { id: string },
-    { page = 1, limit = 10, skip, type, email }: SearchTransactionDto,
+    { page = 1, limit = 10, skip, type, accountNumber }: SearchTransactionDto,
   ): Promise<PaginatedResponseDto<Prisma.TransactionGetPayload<object>>> {
     const where: Prisma.TransactionWhereInput = {
       userId: id,
       ...(type && { type }),
-      ...(email && {
+      ...(accountNumber && {
         toUser: {
-          email: { contains: email, mode: 'insensitive' },
+          accountNumber: { contains: accountNumber, mode: 'insensitive' },
         },
       }),
     };
@@ -36,7 +36,7 @@ export class TransactionsService {
           toUser: {
             select: {
               id: true,
-              email: true,
+              accountNumber: true,
             },
           },
         },
