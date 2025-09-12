@@ -91,7 +91,7 @@ export default function DashboardPage() {
 
   if (!user || !wallet || loading)
     return (
-      <div className="flex h-screen">
+      <div className="flex">
         <main className="flex-1 overflow-y-auto p-6 pt-6">
           <Skeleton className="h-10 w-48 mb-8" />
           <Skeleton className="h-24 w-full mb-10 rounded-xl" />
