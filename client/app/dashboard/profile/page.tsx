@@ -150,7 +150,6 @@ export default function ProfilePage() {
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'multipart/form-data',
           },
         },
       );

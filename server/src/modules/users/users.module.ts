@@ -4,14 +4,14 @@ import { UsersController } from './users.controller';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 @Module({
   imports: [
     MulterModule.register({
       storage: diskStorage({
-        destination: '../static/avatars',
+        destination: join(process.cwd(), 'static', 'avatars'),
         filename: (_req, file, cb) => {
           const fileExtName = extname(file.originalname);
           const newFileName = `${uuidv4()}${fileExtName}`;

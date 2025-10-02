@@ -35,7 +35,7 @@ services:
     env_file:
       - ./server/.env.production.local
     volumes:
-      - ./static:/static
+      - ./server/static:/usr/src/app/static
 
   client:
     build:

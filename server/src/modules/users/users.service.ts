@@ -38,6 +38,7 @@ export class UsersService {
     message: string;
     user: Omit<Prisma.UserGetPayload<object>, 'password'>;
   }> {
+    console.log('Avatar file in service:', avatar);
     const user = await this.prisma.user.update({
       where: { id },
       data: {
